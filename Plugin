@@ -1,0 +1,136 @@
+// 
+// $Id: Plugin.hh,v 1.5 2008/05/01 03:56:02 kilpatds Exp $
+// GPL.  Copyright 2003, Douglas Kilpatrick.
+
+/*
+ * Define your interface....
+ *
+ * class someInterface {
+ * public:
+ *     virtual blah iface(blah) = 0;
+ *     virtual ~someInterface() {};
+ *     someInterface() {};
+ * };
+ *
+ * In your definition, use the PLUGIN() and PLUGIN_DEFS() macros.
+ * PLUGIN declares the class (inheriting from the interface, and some
+ * internal stuff)  PLUGIN_DEFS declares/defines some magic registration
+ * objects (and a factory)
+ *
+ * #include <Plugin>
+ * #include <someInterface>
+ *
+ * PLUGIN(someIterface, someImplementation) {
+ * public:
+ *     virtual blah iface(blah) { whatever };
+ *     ~someImplementation() {}
+ * };
+ * PLUGIN_DEFS(someInterface, someImplemtation);
+ *
+ *
+ * Then in the consumer,
+ *
+ * #include <Plugin>
+ * PLUGIN_BASE()
+ *
+ * somewhere at global scope.  Then....
+ *
+ * someInterface *i = Plugin<someInterface>::getPlugin("someImplementation");
+ *
+ * getPlugin will throw a runtime_error on failure to find the plugin
+ *
+ */
+
+#ifndef PLUGIN_H
+#define PLUGIN_H 1
+
+// dlopen
+#include <dlfcn.h>
+
+#include <errno.h>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <map>
+#include <system_error>
+
+template <class interface>
+class Plugin : public interface {
+public:
+    typedef interface* (*factory_t)();
+    typedef std::map<std::string, factory_t> plugin_map_t;
+    virtual ~Plugin() {};
+    static interface *getPlugin(std::string name);
+    static void regPlugin(std::string &name, factory_t factory);
+
+protected:
+    Plugin() : interface() {};
+
+private:
+    static  plugin_map_t plugin_map;
+};
+
+template <class interface>
+void Plugin<interface>::regPlugin(std::string &name, factory_t factory)
+{
+    plugin_map.insert(std::make_pair(name,factory));
+}
+
+template <class interface>
+interface *Plugin<interface>::getPlugin(std::string name)
+{
+    typename Plugin<interface>::plugin_map_t::iterator it;
+    it = plugin_map.find(name);
+    if (it != plugin_map.end())
+	return (it->second)();
+
+    // Try once to load/find it.
+    // XXX: remote "./"
+    std::stringstream libname;
+    libname << "./" << "lib" << name << ".so";
+    void *lib = dlopen(libname.str().c_str(), RTLD_NOW);
+    if (lib == NULL)
+	throw std::runtime_error(dlerror());
+
+    it = plugin_map.find(name);
+    // XXX: bad implementation of plugin.  Throw
+    if (it == plugin_map.end())
+	throw std::runtime_error("Plugin failed to load factory");
+
+    return (it->second)();
+}
+
+template<std::string *name, class interface, class T>
+class StaticReg {
+    public:
+	static interface* factory(void) {
+            return new T();
+        }
+        StaticReg() {
+            Plugin<interface>::regPlugin(*name, factory);
+        }
+};
+
+template <std::string *name, class interface, class T>
+class RegisterPlugin : public Plugin<interface> {
+    public:
+	static StaticReg<name, interface, T> regobj;
+	RegisterPlugin() { }
+};
+
+template <std::string *name, class interface, class T>
+    StaticReg<name,interface,T> RegisterPlugin<name,interface,T>::regobj;
+
+/* And the parts used by clients.  XXX: Document at the top */
+#define PLUGIN(interface,name)                                  \
+std::string _ ## name ## Str( #name );                          \
+class name : public RegisterPlugin<& _ ## name ## Str, interface, name>
+
+#define PLUGIN_DEFS(interface,name)                             \
+template class RegisterPlugin<& _ ## name ## Str, interface, name>;
+
+#define PLUGIN_BASE()
+template <class interface>
+typename Plugin<interface>::plugin_map_t Plugin<interface>::plugin_map;
+
+#endif

@@ -1,0 +1,10 @@
+Bar.o
+Foo.o
+libBar.so
+libBar.so.1
+libBar.so.1.0
+libFoo.so
+libFoo.so.1
+libFoo.so.1.0
+main
+
