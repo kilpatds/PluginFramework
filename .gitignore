@@ -1,10 +1,16 @@
-Bar.o
-Foo.o
-libBar.so
-libBar.so.1
-libBar.so.1.0
-libFoo.so
-libFoo.so.1
-libFoo.so.1.0
-main
+CMakeCache.txt
+CMakeFiles/
+Makefile
+args_test/CMakeFiles/
+args_test/Makefile
+args_test/argTest
+args_test/cmake_install.cmake
+args_test/libBaz.so
+base_test/CMakeFiles/
+base_test/Makefile
+base_test/baseTest
+base_test/cmake_install.cmake
+base_test/libBar.so
+base_test/libFoo.so
+cmake_install.cmake
 
