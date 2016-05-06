@@ -54,13 +54,17 @@
 #include <map>
 #include <system_error>
 
-template <class interface>
+template <class interface, typename ...A>
 class Plugin : public interface {
 public:
-    typedef interface* (*factory_t)();
+
+    typedef interface* (*factory_t)(A...);
     typedef std::map<std::string, factory_t> plugin_map_t;
+
     virtual ~Plugin() {};
-    static interface *getPlugin(std::string name);
+
+    static interface *getPlugin(std::string name, A...args);
+
     static void regPlugin(std::string &name, factory_t factory);
 
 protected:
@@ -70,19 +74,19 @@ private:
     static  plugin_map_t plugin_map;
 };
 
-template <class interface>
-void Plugin<interface>::regPlugin(std::string &name, factory_t factory)
+template <class interface,typename ...A>
+void Plugin<interface,A...>::regPlugin(std::string &name, factory_t factory)
 {
     plugin_map.insert(std::make_pair(name,factory));
 }
 
-template <class interface>
-interface *Plugin<interface>::getPlugin(std::string name)
+template <class interface, typename ...A>
+interface *Plugin<interface, A...>::getPlugin(std::string name, A...args)
 {
-    typename Plugin<interface>::plugin_map_t::iterator it;
+    typename Plugin<interface, A...>::plugin_map_t::iterator it;
     it = plugin_map.find(name);
     if (it != plugin_map.end())
-	return (it->second)();
+	return (it->second)(args...);
 
     // Try once to load/find it.
     // XXX: remote "./"
@@ -97,40 +101,41 @@ interface *Plugin<interface>::getPlugin(std::string name)
     if (it == plugin_map.end())
 	throw std::runtime_error("Plugin failed to load factory");
 
-    return (it->second)();
+    return (it->second)(args...);
 }
 
-template<std::string *name, class interface, class T>
+template<std::string *name, class interface, class T, typename ...A>
 class StaticReg {
     public:
-	static interface* factory(void) {
-            return new T();
+	static interface* factory(A...args) {
+            return new T(args...);
         }
         StaticReg() {
-            Plugin<interface>::regPlugin(*name, factory);
+            Plugin<interface,A...>::regPlugin(*name, factory);
         }
 };
 
-template <std::string *name, class interface, class T>
-class RegisterPlugin : public Plugin<interface> {
+template <std::string *name, class interface, class T, typename ...A>
+class RegisterPlugin : public Plugin<interface,A...> {
     public:
-	static StaticReg<name, interface, T> regobj;
+	static StaticReg<name, interface, T, A...> regobj;
 	RegisterPlugin() { }
 };
 
-template <std::string *name, class interface, class T>
-    StaticReg<name,interface,T> RegisterPlugin<name,interface,T>::regobj;
+template <std::string *name, class interface, class T, typename ...A>
+    StaticReg<name,interface,T,A...>
+	RegisterPlugin<name,interface,T,A...>::regobj;
 
 /* And the parts used by clients.  XXX: Document at the top */
 #define PLUGIN(interface,name)                                  \
 std::string _ ## name ## Str( #name );                          \
 class name : public RegisterPlugin<& _ ## name ## Str, interface, name>
 
-#define PLUGIN_DEFS(interface,name)                             \
-template class RegisterPlugin<& _ ## name ## Str, interface, name>;
+#define PLUGIN_DEFS(interface,name,...)                         \
+template class RegisterPlugin<& _ ## name ## Str, interface, name, ##__VA_ARGS__>;
 
 #define PLUGIN_BASE()
-template <class interface>
-typename Plugin<interface>::plugin_map_t Plugin<interface>::plugin_map;
+template <class interface, typename ...A>
+typename Plugin<interface, A...>::plugin_map_t Plugin<interface, A...>::plugin_map;
 
 #endif
