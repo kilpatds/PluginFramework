@@ -29,11 +29,15 @@ int main(int argc, const char *const argv[])
     }
 
     try {
-	// Autoload
 	p = Plugin<takesArg,std::string>::getPlugin(argv[1],"Hello World");
     } catch (std::runtime_error &e) {
 	cerr << "Failed to load plugin: " << e.what() << endl;
 	exit(EXIT_FAILURE);
+    }
+    try {
+	p = Plugin<takesArg>::getPlugin(argv[1]);
+    } catch (std::runtime_error &e) {
+	cout << "Expected failure: " << e.what() << ": Success" << endl;
     }
 
     cout << p->print() << endl;
