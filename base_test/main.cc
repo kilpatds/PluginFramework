@@ -1,7 +1,3 @@
-// 
-// $Id: main.cc,v 1.2 2008/05/01 03:56:02 kilpatds Exp $
-// GPL.  Copyright 2003, Douglas Kilpatrick.
-//
 // This file demonstrates how to use the plugin framework in the main
 // application.
 //

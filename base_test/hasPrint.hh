@@ -1,4 +1,3 @@
-
 #ifndef HASPRINT_H
 #define HASPRINT_H 1
 
