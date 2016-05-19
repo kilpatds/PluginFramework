@@ -19,20 +19,23 @@ int main(int argc, const char *const argv[])
 {
     hasPrint *p = NULL;
 
-    if (argc != 2) {
+    if (argc < 2) {
 	cerr << "Usage: " << argv[0] << " <PluginName>" << endl;
 	return EXIT_FAILURE;
     }
 
-    try {
-	// Autoload
-	p = Plugin<hasPrint>::getPlugin(argv[1]);
-    } catch (std::runtime_error &e) {
-	cerr << "Failed to load plugin: " << e.what() << endl;
-	exit(EXIT_FAILURE);
+    for (int i = 1; i < argc; ++i) {
+	    try {
+		    // Autoload
+		    p = Plugin<hasPrint>::getPlugin(argv[i]);
+	    } catch (std::runtime_error &e) {
+		    cerr << "Failed to load plugin: " << e.what() << endl;
+		    exit(EXIT_FAILURE);
+	    }
+
+	    cout << p->print() << endl;
     }
 
-    cout << p->print() << endl;
     return 0;
 }
 
