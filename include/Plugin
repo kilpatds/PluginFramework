@@ -106,7 +106,7 @@ interface *Plugin<interface, A...>::getPlugin(std::string name, A...args)
     typename Plugin<interface, A...>::plugin_map_t::iterator it;
     it = plugin_map.find(name);
     if (it != plugin_map.end())
-	return (it->second)(args...);
+        return (it->second)(args...);
 
     // Try once to load/find it.
     // XXX: remote "./"
@@ -114,12 +114,12 @@ interface *Plugin<interface, A...>::getPlugin(std::string name, A...args)
     libname << "./" << "lib" << name << ".so";
     void *lib = dlopen(libname.str().c_str(), RTLD_NOW);
     if (lib == NULL)
-	throw std::runtime_error(dlerror());
+        throw std::runtime_error(dlerror());
 
     it = plugin_map.find(name);
     // XXX: bad implementation of plugin.  Throw
     if (it == plugin_map.end())
-	throw std::runtime_error("Plugin failed to load factory");
+        throw std::runtime_error("Plugin failed to load factory");
 
     return (it->second)(args...);
 }
@@ -127,7 +127,7 @@ interface *Plugin<interface, A...>::getPlugin(std::string name, A...args)
 template<std::string *name, class interface, class T, typename ...A>
 class StaticReg {
     public:
-	static interface* factory(A...args) {
+        static interface* factory(A...args) {
             return new T(args...);
         }
         StaticReg() {
@@ -138,13 +138,13 @@ class StaticReg {
 template <std::string *name, class interface, class T, typename ...A>
 class RegisterPlugin : public Plugin<interface,A...> {
     public:
-	static StaticReg<name, interface, T, A...> regobj;
-	RegisterPlugin() { }
+        static StaticReg<name, interface, T, A...> regobj;
+        RegisterPlugin() { }
 };
 
 template <std::string *name, class interface, class T, typename ...A>
     StaticReg<name,interface,T,A...>
-	RegisterPlugin<name,interface,T,A...>::regobj;
+        RegisterPlugin<name,interface,T,A...>::regobj;
 
 /* And the parts used by clients.  XXX: Document at the top */
 #define PLUGIN(interface,name)                                  \

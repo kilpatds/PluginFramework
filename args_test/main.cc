@@ -29,10 +29,13 @@ int main(int argc, const char *const argv[])
 	cerr << "Failed to load plugin: " << e.what() << endl;
 	exit(EXIT_FAILURE);
     }
+    cout << p->print() << endl;
+
     try {
 	p = Plugin<takesArg>::getPlugin(argv[1]);
     } catch (std::runtime_error &e) {
-	cout << "Expected failure: " << e.what() << ": Success" << endl;
+	cerr << "Failed to load plugin: " << e.what() << endl;
+	exit(EXIT_FAILURE);
     }
 
     cout << p->print() << endl;
