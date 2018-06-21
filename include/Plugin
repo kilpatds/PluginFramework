@@ -124,9 +124,6 @@ interface *Plugin<interface, A...>::getPlugin(std::string name, A...args)
     return (it->second)(args...);
 }
 
-/* Exists for breakpoints */
-void asdf(void);
-
 template<std::string *name, class interface, class T, typename ...A>
 class StaticReg {
     public:
@@ -134,7 +131,6 @@ class StaticReg {
             return new T(args...);
         }
         StaticReg() {
-            asdf();
             Plugin<interface,A...>::regPlugin(*name, factory);
         }
 };
@@ -160,7 +156,6 @@ template class RegisterPlugin<& _ ## name ## Str, interface, name, ##__VA_ARGS__
 
 #define PLUGIN_BASE()
 template <class interface, typename ...A>
-typename Plugin<interface, A...>::plugin_map_t Plugin<interface, A...>::plugin_map; \
-void asdf(void) { /* Just for breakpoints */ };
+typename Plugin<interface, A...>::plugin_map_t Plugin<interface, A...>::plugin_map;
 
 #endif
