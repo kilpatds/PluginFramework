@@ -32,7 +32,7 @@ int main(int argc, const char *const argv[])
     cout << p->print() << endl;
 
     try {
-	p = Plugin<takesArg>::getPlugin(argv[1]);
+	takesArg *p2 = Plugin<takesArg>::getPlugin(argv[1]);
     } catch (std::runtime_error &e) {
 	cerr << "Failed to load plugin: " << e.what() << endl;
 	exit(EXIT_FAILURE);
